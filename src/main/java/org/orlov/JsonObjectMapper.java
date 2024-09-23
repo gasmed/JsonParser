@@ -141,7 +141,44 @@ public class JsonObjectMapper {
         } else if (object instanceof List) {
             return arrayToJsonString((List<Object>) object);
         } else {
-            throw new UnsupportedOperationException("Тип " + object.getClass() + " не поддерживается");
+            return objectToJsonString(object);  // Добавляем поддержку обычных объектов
+        }
+    }
+
+    private String objectToJsonString(Object object) throws Exception {
+        StringBuilder json = new StringBuilder("{");
+        Class<?> clazz = object.getClass();
+        Field[] fields = clazz.getDeclaredFields();
+
+        for (Field field : fields) {
+            field.setAccessible(true);  // Для доступа к приватным полям
+            Object value = field.get(object);
+            json.append("\"").append(field.getName()).append("\": ")
+                    .append(valueToJsonString(value)).append(",");
+        }
+
+        if (json.length() > 1) json.deleteCharAt(json.length() - 1);  // Удаляем последнюю запятую
+        json.append("}");
+        return json.toString();
+    }
+
+    private String valueToJsonString(Object value) {
+        if (value == null) {
+            return "null";
+        } else if (value instanceof String) {
+            return "\"" + value + "\"";
+        } else if (value instanceof Number || value instanceof Boolean) {
+            return value.toString();
+        } else if (value instanceof Map) {
+            return mapToJsonString((Map<String, Object>) value);
+        } else if (value instanceof List) {
+            return arrayToJsonString((List<Object>) value);
+        } else {  // Если это пользовательский объект
+            try {
+                return objectToJsonString(value);  // Рекурсивно конвертируем объект
+            } catch (Exception e) {
+                throw new UnsupportedOperationException("Ошибка при конвертации объекта " + value.getClass(), e);
+            }
         }
     }
 
@@ -164,21 +201,5 @@ public class JsonObjectMapper {
         if (json.length() > 1) json.deleteCharAt(json.length() - 1);
         json.append("]");
         return json.toString();
-    }
-
-    private String valueToJsonString(Object value) {
-        if (value == null) {
-            return "null";
-        } else if (value instanceof String) {
-            return "\"" + value + "\"";
-        } else if (value instanceof Number || value instanceof Boolean) {
-            return value.toString();
-        } else if (value instanceof Map) {
-            return mapToJsonString((Map<String, Object>) value);
-        } else if (value instanceof List) {
-            return arrayToJsonString((List<Object>) value);
-        } else {
-            throw new UnsupportedOperationException("Тип " + value.getClass() + " не поддерживается");
-        }
     }
 }

@@ -200,6 +200,19 @@ public class JsonParserTest {
         assertEquals("John", result.getName());
         assertEquals(30, result.getAge());
     }
+
+    @Test
+    void testToJsonStringWithCustomClass() throws Exception {
+        Person person = new Person();
+        person.setName("John");
+        person.setAge(30);
+
+        String jsonString = parser.toJson(person);
+        String expectedJsonString = "{\"name\": \"John\",\"age\": 30}";
+
+        assertEquals(expectedJsonString, jsonString);
+    }
+
 }
 
 class Person {
